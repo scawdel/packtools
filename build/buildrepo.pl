@@ -33,6 +33,7 @@ use strict;
 use File::Find::Rule;
 use File::Spec;
 use Digest::MD5;
+use IO::Uncompress::Unzip qw(unzip $UnzipError);
 
 # The root of the repository; must end in /
 
@@ -78,17 +79,41 @@ sub build_repo {
 		foreach my $file (@files) {
 			my $relative = File::Spec->abs2rel($file, $root.$indexes);
 
-			open(FILE, $file) or die "Can't find file $file\n";
-			my $ctx = Digest::MD5->new;
-			$ctx->addfile(*FILE);
-			my $digest = $ctx->hexdigest;
-			close(FILE);
+			# Calculate the MD5 hash for the file.
 
-			print "** " . $file . "\n";
-			print "Size: " . (-s $file) . "\n";
-			print "MD5Sum: " . $digest . "\n";
-			print "URL: " . $relative . "\n";
-			print "\n\n";
+			my $md5;
+			if (open(FILE, $file)) {
+				my $ctx = Digest::MD5->new;
+				$ctx->addfile(*FILE);
+				$md5 = $ctx->hexdigest;
+				close(FILE);
+			}
+
+			# Exctract the control file, if we can. Try two filenames, to allow
+			# for the fact tha Unzip seems to get confused by the RISC OS
+			# filetypes.
+
+			my $control;
+			unzip $file => \$control, Name => "RiscPkg/Control\x00fff" or $control = undef;
+			if (!defined($control)) {
+				unzip $file => \$control, Name => "RiscPkg/Control" or $control = undef;
+			}
+
+			# If the file existed and could be understood, then process it and add it
+			# to the package index.
+
+			if (defined($md5) && defined($control)) {
+				chomp $control;
+
+				#print "** " . $file . "\n";
+				print $control . "\n";
+				print "Size: " . (-s $file) . "\n";
+				print "MD5Sum: " . $md5 . "\n";
+				print "URL: " . $relative . "\n";
+				print "\n\n";
+			} else {
+				print "Unzip failed: " . $UnzipError . "\n";
+			}
 		}
 	}
 }
