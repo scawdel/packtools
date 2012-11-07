@@ -103,13 +103,26 @@ sub build_repo {
 			# to the package index.
 
 			if (defined($md5) && defined($control)) {
+				my $field = parse_control($control);
+
 				chomp $control;
 
-				#print "** " . $file . "\n";
 				print $control . "\n";
 				print "Size: " . (-s $file) . "\n";
 				print "MD5Sum: " . $md5 . "\n";
 				print "URL: " . $relative . "\n";
+				print "\n\n";
+
+				print "<h2>" . ((defined($field->{'Package'})) ? $field->{'Package'} : "Untitled") . "</h2>\n\n";
+
+				if (defined($field->{'Description'})) {
+					my $description = $field->{'Description'};
+
+					$description =~ s|\n|</p>\n\n<p>|g;
+
+					print "<p>".$description."</p>\n\n";
+				}
+
 				print "\n\n";
 			} else {
 				print "Unzip failed: " . $UnzipError . "\n";
@@ -118,3 +131,44 @@ sub build_repo {
 	}
 }
 
+
+# Break a control file up into a hash, with each token being held in a separate
+# entry.
+#
+# Param $control	The control file contents.
+# Return		A reference to the control hash.
+
+sub parse_control {
+	my ($control) = @_;
+
+	my %field;
+	my $last;
+	my $first_extra_line = 0;
+
+	foreach my $line (split('\n', $control)) {
+		if (substr($line, 0, 1) ne " ") {
+			my ($name, $value) = split(':', $line);
+			$value =~ s/^\s+|\s+$//g;
+
+			$field{$name} = $value;
+			$last = $name;
+			$first_extra_line = 1;
+		} else {
+			if (defined($last)) {
+				$line =~ s/^\s+|\s+$//g;
+
+				if ($line ne '.' && length($line) > 0) {
+					if ($first_extra_line) {
+						$field{$last} .= "\n";
+					}
+					$field{$last} .= $line;
+				} else {
+					$field{$last} .= "\n";
+				}
+					$first_extra_line = 0;
+			}
+		}
+	}
+
+	return \%field;
+}
