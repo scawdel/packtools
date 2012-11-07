@@ -147,6 +147,10 @@ sub parse_control {
 
 	foreach my $line (split('\n', $control)) {
 		if (substr($line, 0, 1) ne " ") {
+			# If there's no space at the start of the line, this is a new
+			# token. Break into token:value, then remove whitespace from
+			# value.
+
 			my ($name, $value) = split(':', $line);
 			$value =~ s/^\s+|\s+$//g;
 
@@ -154,6 +158,11 @@ sub parse_control {
 			$last = $name;
 			$first_extra_line = 1;
 		} else {
+			# If there's whitespace at the start of the line, this is a
+			# continuation of the previous line. Process this: lines are
+			# joined with no newline, apart from before the first continuation
+			# of a token value. A . on its own is a linebreak.
+
 			if (defined($last)) {
 				$line =~ s/^\s+|\s+$//g;
 
