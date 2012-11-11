@@ -83,7 +83,8 @@ sub build_repo {
 		my @files = $rule->in(($root.$folder));
 
 		foreach my $file (@files) {
-			my $relative = File::Spec->abs2rel($file, $root.$indexes);
+			my $relative_index = File::Spec->abs2rel($file, $root.$indexes);
+			my $relative_catalogue = File::Spec->abs2rel($file, $root);
 
 			# Calculate the MD5 hash for the file.
 
@@ -110,19 +111,21 @@ sub build_repo {
 
 			if (defined($md5) && defined($control)) {
 				my $field = parse_control($control);
+				my $size = (-s $file);
+				my $name = (defined($field->{'Package'})) ? $field->{'Package'} : "Untitled";
 
 				chomp $control;
 
 				print $control . "\n";
-				print "Size: " . (-s $file) . "\n";
+				print "Size: " . $size . "\n";
 				print "MD5Sum: " . $md5 . "\n";
-				print "URL: " . $relative . "\n";
+				print "URL: " . $relative_index . "\n";
 				print "\n\n";
 
 
-				print CATALOGUE "<img src=\"../images/module.png\" alt=\"\" width=34 height=34 class=\"list-image\">\n\n";
+				print CATALOGUE "<img src=\"../images/zip.png\" alt=\"\" width=34 height=34 class=\"list-image\">\n\n";
 
-				print CATALOGUE "<h3>" . ((defined($field->{'Package'})) ? $field->{'Package'} : "Untitled") . "</h3>\n\n";
+				print CATALOGUE "<h3>" . $name . "</h3>\n\n";
 
 				if (defined($field->{'Description'})) {
 					my $description = $field->{'Description'};
@@ -131,6 +134,12 @@ sub build_repo {
 
 					print CATALOGUE "<p>".$description."</p>\n\n";
 				}
+
+
+				print CATALOGUE "<p class=\"download\"><img src=\"../images/zip.png\" alt=\"\" width=34 height=34>\n";
+				# print CATALOGUE "<img src=\"../images/iyonix.gif\" alt=\"Iyonix OK\" width=34 height=39 class=\"iyonix\">\n";
+				print CATALOGUE "<b>Download:</b> <a href=\"".$relative_catalogue."\">".$name." ".$field->{'Version'}."</a><br>\n";
+				print CATALOGUE $size . " bytes | 6th December, 2002 | 26/32-bit neutral</p>\n\n";
 
 				print CATALOGUE "\n\n";
 			} else {
