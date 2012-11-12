@@ -147,6 +147,7 @@ sub build_repo {
 
 				$field->{'Cat-Date'} = $date;
 				$field->{'Cat-URL'} = File::Spec->abs2rel($file, $root);
+				$field->{'Cat-Control'} = $control;
 
 				if (!defined($packages{$field->{'Package'}})) {
 					$packages{$field->{'Package'}} = {$field->{'Version'} => $field};
@@ -171,6 +172,7 @@ sub build_repo {
 			"th", "th", "th", "th", "st");
 
 	open(CATALOGUE, ">".$root.$catalogue) || die "Can't open output file: $!\n";
+	open(INDEX, ">".$root.$indexes.$index) || die "Can't open output file: $!\n";
 
 	print CATALOGUE make_catalogue_header($name);
 
@@ -225,6 +227,12 @@ sub build_repo {
 			print CATALOGUE " | 26/32-bit neutral</p>\n\n";
 
 			print CATALOGUE "\n\n";
+
+			print INDEX $fields->{'Cat-Control'};
+			print INDEX "Size: " . $fields->{'Size'} . "\n";
+			print INDEX "MD5Sum: " . $fields->{'MD5Sum'} . "\n";
+			print INDEX "URL: " . $fields->{'URL'} . "\n";
+			print INDEX "\n\n";
 		}
 	}
 
@@ -232,60 +240,7 @@ sub build_repo {
 	print CATALOGUE make_catalogue_footer($name, $date->day().$date_postfix[$date->day()]. " " . $date->month_name() . ", " . $date->year());
 
 	close(CATALOGUE);
-
-	return;
-
-	foreach my $folder (@folders) {
-		my $rule = File::Find::Rule->new;
-		$rule->file();
-		my @files = $rule->in(($root.$folder));
-
-		foreach my $file (@files) {
-			my $relative_index = File::Spec->abs2rel($file, $root.$indexes);
-			my $relative_catalogue = File::Spec->abs2rel($file, $root);
-
-			# Calculate the MD5 hash for the file.
-
-			my $md5;
-			if (open(FILE, $file)) {
-				my $ctx = Digest::MD5->new;
-				$ctx->addfile(*FILE);
-				$md5 = $ctx->hexdigest;
-				close(FILE);
-			}
-
-			# Exctract the control file, if we can. Try two filenames, to allow
-			# for the fact tha Unzip seems to get confused by the RISC OS
-			# filetypes.
-
-			my $control;
-			unzip $file => \$control, Name => "RiscPkg/Control\x00fff" or $control = undef;
-			if (!defined($control)) {
-				unzip $file => \$control, Name => "RiscPkg/Control" or $control = undef;
-			}
-
-			# If the file existed and could be understood, then process it and add it
-			# to the package index.
-
-			if (defined($md5) && defined($control)) {
-				my $field = parse_control($control);
-				my $size = (-s $file);
-				my $name = (defined($field->{'Package'})) ? $field->{'Package'} : "Untitled";
-
-				chomp $control;
-
-				print $control . "\n";
-				print "Size: " . $size . "\n";
-				print "MD5Sum: " . $md5 . "\n";
-				print "URL: " . $relative_index . "\n";
-				print "\n\n";
-
-
-			} else {
-				print "Unzip failed: " . $UnzipError . "\n";
-			}
-		}
-	}
+	close(INDEX);
 }
 
 
