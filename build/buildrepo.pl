@@ -44,19 +44,20 @@ my $root = "/home/steve/Development/Packaging/Repo/software/repo/";
 
 my $indexes = "pkg/";
 
-# Repository details; index, catalogue, folder [, folder... ]
+# Repository details; name, index, catalogue, folder [, folder... ]
 
 my @repos = (
-	['stable',	'stable.html',		'stable'],
-	['unstable',	'unstable.html',	'unstable']);
+	['Stable',	'stable',	'stable.html',		'stable'],
+	['Unstable',	'unstable',	'unstable.html',	'unstable']);
 
 foreach my $repo (@repos) {
+	my $name = shift @$repo;
 	my $index = shift @$repo;
 	my $catalogue = shift @$repo;
 
-	print "Generate repository index " . $index . "\n";
+	print "Generate repository " . $name . "\n";
 
-	build_repo($root, $indexes, $index, $catalogue, @$repo);
+	build_repo($name, $root, $indexes, $index, $catalogue, @$repo);
 }
 
 
@@ -65,6 +66,7 @@ foreach my $repo (@repos) {
 # Build a repository index file based on the packages found in one or more
 # subdirectories of the root.
 #
+# Param $name		The name of the repository.
 # Param $root		The repository root directory.
 # Param $indexes	The index folder for the repository.
 # Param $index		The index file for the repository.
@@ -72,7 +74,7 @@ foreach my $repo (@repos) {
 # Param @folders	The folders to be scanned for the repository.
 
 sub build_repo {
-	my ($root, $indexes, $index, $catalogue, @folders) = @_;
+	my ($name, $root, $indexes, $index, $catalogue, @folders) = @_;
 
 	my %packages;
 
@@ -170,7 +172,9 @@ sub build_repo {
 
 	open(CATALOGUE, ">".$root.$catalogue) || die "Can't open output file: $!\n";
 
-	print CATALOGUE make_catalogue_header("Repo Name");
+	print CATALOGUE make_catalogue_header($name);
+
+	my $newest_date = 0;
 
 	foreach my $pkg_key (sort keys(%packages)) {
 		print "Processing " . $pkg_key . "\n";
@@ -204,6 +208,10 @@ sub build_repo {
 			my $size = $fields->{'Size'};
 			my $size_unit = "bytes";
 
+			if ($fields->{'Cat-Date'} > $newest_date) {
+				$newest_date = $fields->{'Cat-Date'};
+			}
+
 			if ($size > 1048576) {
 				$size = int(($size + 524288) / 1048576);
 				$size_unit = "Mbytes";
@@ -220,7 +228,8 @@ sub build_repo {
 		}
 	}
 
-	print CATALOGUE make_catalogue_footer();
+	my $date = DateTime->from_epoch(epoch => $newest_date);
+	print CATALOGUE make_catalogue_footer($name, $date->day().$date_postfix[$date->day()]. " " . $date->month_name() . ", " . $date->year());
 
 	close(CATALOGUE);
 
@@ -342,13 +351,13 @@ sub make_catalogue_header {
 <head>
 <meta http-equiv=\"Content-Type\" content=\"text/html; charset=iso-8859-1\">
 <link rel=\"stylesheet\" type=\"text/css\" href=\"../../style/base.css\" media=\"screen\">
-<title>RISC OS Software &ndash; Repositories &ndash; Repo</title>
+<title>RISC OS Software &ndash; Repositories &ndash; ".$name."</title>
 </head>
 
 <body bgcolor=\"#ffffff\" text=\"#000000\">
 <div id=\"container\">
 <div id=\"header\">
-<h1>Repositories &ndash; Repo</h1>
+<h1>Repositories &ndash; ".$name."</h1>
 </div>
 
 <div id=\"content\">
@@ -356,7 +365,7 @@ sub make_catalogue_header {
 <p class=\"breadcrumb\">[ <a href=\"../../\" class=\"breadcrumb\">Home</a>
 | <a href=\"../\" class=\"breadcrumb\">RISC OS Software</a>
 | <a href=\"index.html\" class=\"breadcrumb\">Repositories</a>
-| <span class=\"breadcrumb-here\">Repo</span> ]</p>
+| <span class=\"breadcrumb-here\">".$name."</span> ]</p>
 
 <p>The pieces of software on this page all falls under the heading of
 &quot;desktop utilities&quot; - adding small extra features or
@@ -383,12 +392,14 @@ OK&quot; logo.</p>
 }
 
 sub make_catalogue_footer {
+	my ($name, $date) = @_;
+
 	return
 
 "<p class=\"breadcrumb\">[ <a href=\"../../\" class=\"breadcrumb\">Home</a>
 | <a href=\"../\" class=\"breadcrumb\">RISC OS Software</a>
 | <a href=\"index.html\" class=\"breadcrumb\">Repositories</a>
-| <span class=\"breadcrumb-here\">Repositories</span> ]</p>
+| <span class=\"breadcrumb-here\">".$name."</span> ]</p>
 
 </div>
 
@@ -398,7 +409,7 @@ sub make_catalogue_footer {
 <a href=\"http://www.anybrowser.org/campaign/\"><img src=\"../../images/any.gif\" alt=\"Best veiwed with Any Browser!\" width=81 height=31 border=0></a>&nbsp;
 <a href=\"http://jigsaw.w3.org/css-validator/check/referer\"><img src=\"../../images/vcss.gif\" alt=\"Valid CSS!\" width=88 height=31 border=0></a></p>
 
-<p>Page last updated 5th August, 2007 | Maintained by Steve Fryatt:
+<p>Page last updated ".$date." | Maintained by Steve Fryatt:
 <a href=\"mailto:web\@stevefryatt.org.uk\">web\@stevefryatt.org.uk</a></p>
 </div>
 </div>
