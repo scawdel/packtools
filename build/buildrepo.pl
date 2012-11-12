@@ -28,12 +28,13 @@
 
 use strict;
 
-# Requires libfile-find-rule-perl package.
+# Requires libfile-find-rule-perl and libdatetime-perl packages.
 
 use File::Find::Rule;
 use File::Spec;
 use Digest::MD5;
 use IO::Uncompress::Unzip qw(unzip $UnzipError);
+use DateTime;
 
 # The root of the repository; must end in /
 
@@ -73,9 +74,157 @@ foreach my $repo (@repos) {
 sub build_repo {
 	my ($root, $indexes, $index, $catalogue, @folders) = @_;
 
+	my %packages;
+
+	# Scan the package folders in the repository and collect all of the
+	# packages that we can find:
+	#
+	# %packages contains an entry for each unique Package tag found, containing
+	# a reference to a new hash.
+	#
+	# The referenced hash contains an entry for each unique Version tag found,
+	# containing a reference to another new hash.
+	#
+	# This referenced hash contains all of the tag data for the package version,
+	# plus any other data required by the output.
+
+	foreach my $folder (@folders) {
+		my $rule = File::Find::Rule->new;
+		$rule->file();
+		my @files = $rule->in(($root.$folder));
+
+		foreach my $file (@files) {
+			print "Starting to process " . $file . "...\n";
+
+			my $md5;
+			my $size;
+			my $date;
+
+			# Collect the Size, Creation Date and MD5Sum for the file.
+
+			if (open(FILE, $file)) {
+				my $ctx = Digest::MD5->new;
+				$ctx->addfile(*FILE);
+				$md5 = $ctx->hexdigest;
+
+				my @stat = stat(FILE);
+				$size = $stat[7];
+				$date = $stat[9];
+				close(FILE);
+			}
+
+			# Exctract the control file, if we can. Try two filenames, to allow
+			# for the fact tha Unzip seems to get confused by the RISC OS
+			# filetypes.
+
+			my $control;
+			unzip $file => \$control, Name => "RiscPkg/Control\x00fff" or $control = undef;
+			if (!defined($control)) {
+				unzip $file => \$control, Name => "RiscPkg/Control" or $control = undef;
+			}
+
+			# If the file existed and could be understood, then process it and add it
+			# to the package index.
+
+			if (defined($md5) && defined($size) && defined($date) && defined($control)) {
+				my $field = parse_control($control);
+
+				if (!defined($field->{'Package'})) {
+					$field->{'Package'} = "Untitled";
+					print "Missing Package attribute in " . $file . "\n";
+				}
+
+				if (!defined($field->{'Version'})) {
+					$field->{'Version'} = "Unknown";
+					print "Missing Version attribute in " . $file . "\n";
+				}
+
+				$field->{'Size'} = $size;
+				$field->{'MD5Sum'} = $md5;
+				$field->{'URL'} = File::Spec->abs2rel($file, $root.$indexes);
+
+				$field->{'Cat-Date'} = $date;
+				$field->{'Cat-URL'} = File::Spec->abs2rel($file, $root);
+
+				if (!defined($packages{$field->{'Package'}})) {
+					$packages{$field->{'Package'}} = {$field->{'Version'} => $field};
+					print "Version " . $field->{'Version'} . " added to new package " . $field->{'Package'} . ".\n";
+				} elsif (!defined($packages{$field->{'Package'}}->{$field->{'Version'}})) {
+					$packages{$field->{'Package'}}->{$field->{'Version'}} = $field;
+					print "Version " . $field->{'Version'} . " added to existing package " . $field->{'Package'} . ".\n";
+				} else {
+					print "Duplicate package.\n";
+				}
+			} else {
+				print "Failed to process.\n";
+			}
+		}
+	}
+
+	# Output the human-friendly catalogue page.
+
+	my @date_postfix = ("-", "st", "nd", "rd", "th", "th", "th", "th", "th",
+			"th", "th", "th", "th", "th", "th", "th", "th", "th",
+			"th", "th", "th", "st", "nd", "rd", "th", "th", "th",
+			"th", "th", "th", "th", "st");
+
 	open(CATALOGUE, ">".$root.$catalogue) || die "Can't open output file: $!\n";
 
 	print CATALOGUE make_catalogue_header("Repo Name");
+
+	foreach my $pkg_key (sort keys(%packages)) {
+		print "Processing " . $pkg_key . "\n";
+
+		my $versions = $packages{$pkg_key};
+
+		print CATALOGUE "<img src=\"../images/zip.png\" alt=\"\" width=34 height=34 class=\"list-image\">\n\n";
+		print CATALOGUE "<h3>" . $pkg_key . "</h3>\n\n";
+
+		my $last_description = "";
+
+		foreach my $vsn_key (sort {$b cmp $a} keys(%$versions)) {
+			print "..Processing " . $vsn_key . "\n";
+
+			my $fields = $versions->{$vsn_key};
+
+
+			if (defined($fields->{'Description'}) && $fields->{'Description'} ne $last_description) {
+				my $description = $fields->{'Description'};
+				$description =~ s|\n|</p>\n\n<p>|g;
+				print CATALOGUE "<p>".$description."</p>\n\n";
+				$last_description = $fields->{'Description'};
+			}
+
+			print CATALOGUE "<p class=\"download\"><img src=\"../images/zip.png\" alt=\"\" width=34 height=34>\n";
+			# print CATALOGUE "<img src=\"../images/iyonix.gif\" alt=\"Iyonix OK\" width=34 height=39 class=\"iyonix\">\n";
+			print CATALOGUE "<b>Download:</b> <a href=\"".$fields->{'Cat-URL'}."\">".$fields->{'Package'}." ".$fields->{'Version'}."</a> ";
+			print CATALOGUE "(MD5: <code>" . $fields->{'MD5Sum'} . "</code>)<br>\n";
+
+			my $date = DateTime->from_epoch(epoch => $fields->{'Cat-Date'});
+			my $size = $fields->{'Size'};
+			my $size_unit = "bytes";
+
+			if ($size > 1048576) {
+				$size = int(($size + 524288) / 1048576);
+				$size_unit = "Mbytes";
+			} elsif ($size > 1536) {
+				$size = int(($size + 512) / 1024);
+				$size_unit = "Kbytes";
+			}
+
+			print CATALOGUE $size . " " . $size_unit . " | ";
+			print CATALOGUE $date->day().$date_postfix[$date->day()]. " " . $date->month_name() . ", " . $date->year();
+			print CATALOGUE " | 26/32-bit neutral</p>\n\n";
+
+			print CATALOGUE "\n\n";
+		}
+	}
+
+	print CATALOGUE make_catalogue_footer();
+
+	close(CATALOGUE);
+
+	return;
 
 	foreach my $folder (@folders) {
 		my $rule = File::Find::Rule->new;
@@ -123,33 +272,10 @@ sub build_repo {
 				print "\n\n";
 
 
-				print CATALOGUE "<img src=\"../images/zip.png\" alt=\"\" width=34 height=34 class=\"list-image\">\n\n";
-
-				print CATALOGUE "<h3>" . $name . "</h3>\n\n";
-
-				if (defined($field->{'Description'})) {
-					my $description = $field->{'Description'};
-
-					$description =~ s|\n|</p>\n\n<p>|g;
-
-					print CATALOGUE "<p>".$description."</p>\n\n";
-				}
-
-
-				print CATALOGUE "<p class=\"download\"><img src=\"../images/zip.png\" alt=\"\" width=34 height=34>\n";
-				# print CATALOGUE "<img src=\"../images/iyonix.gif\" alt=\"Iyonix OK\" width=34 height=39 class=\"iyonix\">\n";
-				print CATALOGUE "<b>Download:</b> <a href=\"".$relative_catalogue."\">".$name." ".$field->{'Version'}."</a><br>\n";
-				print CATALOGUE $size . " bytes | 6th December, 2002 | 26/32-bit neutral</p>\n\n";
-
-				print CATALOGUE "\n\n";
 			} else {
 				print "Unzip failed: " . $UnzipError . "\n";
 			}
 		}
-
-	print CATALOGUE make_catalogue_footer();
-
-	close(CATALOGUE);
 	}
 }
 
