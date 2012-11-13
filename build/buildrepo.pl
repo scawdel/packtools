@@ -22,9 +22,10 @@
 # See the Licence for the specific language governing
 # permissions and limitations under the Licence.
 
-# TextMan -- Convert help-markup into plain text files.
+# BuildRepo -- Build repository catalogues and index files based on the
+#              packages containd in them.
 #
-# Usage: TextMan -I<infile> -O<outfile> [-D<var>=<val> ...]
+# Usage: BuildRepo
 
 use strict;
 
@@ -338,12 +339,25 @@ sub parse_control {
 	return \%field;
 }
 
+
+# Take a block of newline separated paragraphs and turn them into formatted
+# HTML.
+#
+# Param:		The text to be formatted.
+# Return:		The formatted text.
+
 sub make_html_block {
 	my ($text) = @_;
 
 	$text =~ s|\n|</p>\n\n<p>|g;
 	return "<p>".$text."</p>\n";
 }
+
+
+# Return a repository catalogue page's HTML header.
+#
+# Param:		The name of the repository.
+# Return:		The page header.
 
 sub make_catalogue_header {
 	my ($name) = @_;
@@ -376,6 +390,12 @@ sub make_catalogue_header {
 ";
 }
 
+
+# Return a repository catalogue page's index path info as a block of HTML.
+#
+# Param:		The public URL for the index.
+# Return:		The index info block.
+
 sub make_catalogue_path_info {
 	my ($index) = @_;
 
@@ -395,6 +415,13 @@ stand-alone zip archives found via the <a href=\"../\">main software pages</a>.<
 
 ";
 }
+
+
+# Return a repository catalogue page's HTML footer.
+#
+# Param:		The name of the repository.
+# Param:		The update date for the page, in text format.
+# Return:		The page footer.
 
 sub make_catalogue_footer {
 	my ($name, $date) = @_;
@@ -422,3 +449,4 @@ sub make_catalogue_footer {
 </html>
 ";
 }
+
