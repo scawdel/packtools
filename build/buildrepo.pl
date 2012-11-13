@@ -44,20 +44,34 @@ my $root = "/home/steve/Development/Packaging/Repo/software/repo/";
 
 my $indexes = "pkg/";
 
-# Repository details; name, index, catalogue, folder [, folder... ]
+# Repository details; name, index, catalogue, introduction, folder [, folder... ]
 
 my @repos = (
-	['Stable',	'stable',	'stable.html',		'stable'],
-	['Unstable',	'unstable',	'unstable.html',	'unstable']);
+	# Stable Repository
+
+	['Stable',	'stable',	'stable.html',
+
+	'This is another description.',
+
+	'stable'],
+
+	# Unstable Repository
+
+	['Unstable',	'unstable',	'unstable.html',
+
+	'This is some description.',
+
+	'unstable']);
 
 foreach my $repo (@repos) {
 	my $name = shift @$repo;
 	my $index = shift @$repo;
 	my $catalogue = shift @$repo;
+	my $intro = shift @$repo;
 
 	print "Generate repository " . $name . "\n";
 
-	build_repo($name, $root, $indexes, $index, $catalogue, @$repo);
+	build_repo($name, $intro, $root, $indexes, $index, $catalogue, @$repo);
 }
 
 
@@ -67,6 +81,7 @@ foreach my $repo (@repos) {
 # subdirectories of the root.
 #
 # Param $name		The name of the repository.
+# Param $intro		The introductory text for the repository.
 # Param $root		The repository root directory.
 # Param $indexes	The index folder for the repository.
 # Param $index		The index file for the repository.
@@ -74,7 +89,7 @@ foreach my $repo (@repos) {
 # Param @folders	The folders to be scanned for the repository.
 
 sub build_repo {
-	my ($name, $root, $indexes, $index, $catalogue, @folders) = @_;
+	my ($name, $intro, $root, $indexes, $index, $catalogue, @folders) = @_;
 
 	my %packages;
 
@@ -175,6 +190,9 @@ sub build_repo {
 	open(INDEX, ">".$root.$indexes.$index) || die "Can't open output file: $!\n";
 
 	print CATALOGUE make_catalogue_header($name);
+	print CATALOGUE make_html_block($intro);
+
+	print CATALOGUE "\n";
 
 	my $newest_date = 0;
 
@@ -183,6 +201,7 @@ sub build_repo {
 
 		my $versions = $packages{$pkg_key};
 
+		print CATALOGUE "\n<!-- " . $pkg_key . " -->\n\n";
 		print CATALOGUE "<img src=\"../images/zip.png\" alt=\"\" width=34 height=34 class=\"list-image\">\n\n";
 		print CATALOGUE "<h3>" . $pkg_key . "</h3>\n\n";
 
@@ -195,9 +214,7 @@ sub build_repo {
 
 
 			if (defined($fields->{'Description'}) && $fields->{'Description'} ne $last_description) {
-				my $description = $fields->{'Description'};
-				$description =~ s|\n|</p>\n\n<p>|g;
-				print CATALOGUE "<p>".$description."</p>\n\n";
+				print CATALOGUE make_html_block($fields->{'Description'}) . "\n";
 				$last_description = $fields->{'Description'};
 			}
 
@@ -225,8 +242,6 @@ sub build_repo {
 			print CATALOGUE $size . " " . $size_unit . " | ";
 			print CATALOGUE $date->day().$date_postfix[$date->day()]. " " . $date->month_name() . ", " . $date->year();
 			print CATALOGUE " | 26/32-bit neutral</p>\n\n";
-
-			print CATALOGUE "\n\n";
 
 			print INDEX $fields->{'Cat-Control'};
 			print INDEX "Size: " . $fields->{'Size'} . "\n";
@@ -294,6 +309,13 @@ sub parse_control {
 	return \%field;
 }
 
+sub make_html_block {
+	my ($text) = @_;
+
+	$text =~ s|\n|</p>\n\n<p>|g;
+	return "<p>".$text."</p>\n";
+}
+
 sub make_catalogue_header {
 	my ($name) = @_;
 
@@ -321,27 +343,6 @@ sub make_catalogue_header {
 | <a href=\"../\" class=\"breadcrumb\">RISC OS Software</a>
 | <a href=\"index.html\" class=\"breadcrumb\">Repositories</a>
 | <span class=\"breadcrumb-here\">".$name."</span> ]</p>
-
-<p>The pieces of software on this page all falls under the heading of
-&quot;desktop utilities&quot; - adding small extra features or
-functionality to the desktop.  Many of them are relocatable modules that
-can be added to the RISC OS boot sequence, though there are also some
-small applications or even BASIC programs here too.</p>
-
-<h2>Compatibility</h2>
-
-<p>All the software on this page (apart from <cite>Find Icon Bar</cite>,
-which isn't required with the &quot;Nested Wimp&quot;) is RISC OS 4
-compatible and has been tested on RISC OS Select. If a minimum version of
-RISC OS is required, this is indicated next to the download archive; all
-software requires RISC OS 3.1 or better.</p>
-
-<p>With the arrival of RISC OS 5, work is underway to ensure that all the
-software (when applicable) will work on both 26-bit and 32-bit systems.
-Most items are now marked &quot;26/32-bit neutral&quot;; anything tested
-to Castle's requirements will also be marked with the &quot;Iyonix
-OK&quot; logo.</p>
-
 
 ";
 }
