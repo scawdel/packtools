@@ -276,7 +276,7 @@ sub build_repo {
 		}
 	}
 
-	my $date = DateTime->from_epoch(epoch => $newest_date);
+	my $date = ($newest_date != 0) ? DateTime->from_epoch(epoch => $newest_date) : DateTime->now();
 	print CATALOGUE make_catalogue_footer($name, $date->day().$date_postfix[$date->day()]. " " . $date->month_name() . ", " . $date->year());
 
 	close(CATALOGUE);
