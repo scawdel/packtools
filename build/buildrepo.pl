@@ -36,6 +36,10 @@ use Digest::MD5;
 use IO::Uncompress::Unzip qw(unzip $UnzipError);
 use DateTime;
 
+# The public URL of the repository; must end in /
+
+my $url = "http://www.stevefryatt.org.uk/software/repo/";
+
 # The root of the repository; must end in /
 
 my $root = "/home/steve/Development/Packaging/Repo/software/repo/";
@@ -51,7 +55,9 @@ my @repos = (
 
 	['Stable',	'stable',	'stable.html',
 
-	'This is another description.',
+'<p>The &lsquo;stable&rsquo; repository contains release versions of software. If
+you wish to test the latest &ldquo;cutting-edge&rdquo; developments, you should
+make use of the packages in the <a href="unstable.html">unstable repository</a>.</p>',
 
 	'stable'],
 
@@ -59,7 +65,25 @@ my @repos = (
 
 	['Unstable',	'unstable',	'unstable.html',
 
-	'This is some description.',
+'<p>The &lsquo;unstable&rsquo; repository contains packages of software which
+is currently under development. In contrast to the <a href="stable.html">stable
+repository</a>, the packages here are development test builds of software which
+can be found elsewhere. By their nature, these builds have had limited testing
+and may contain bugs or even be unstable. While testing and feedback will be
+welcomed, users uncomfortable with the potential risks may prefer to continue
+using the stable releases of these applications &ndash; which can be found
+elsewhere on this site.</p>
+
+<p><strong>These builds may contain bugs, be unstable and have the potential to
+cause data loss. Those using them are advised to maintain adequate backups of
+important data and follow sensible precautions.</strong></p>
+
+<p>Test builds can be easily identified from the version details in their
+documentation and the info box on the iconbar menu. Whereas stable releases have
+a version number of the form &ldquo;1.23&rdquo;, test builds carry the build date
+and a revision number of the form &ldquo;r123&rdquo; which uniquely identifies the
+version of source code used to create it. When reporting bugs, please always quote
+the relevant version number or revision code.</p>',
 
 	'unstable']);
 
@@ -71,7 +95,7 @@ foreach my $repo (@repos) {
 
 	print "Generate repository " . $name . "\n";
 
-	build_repo($name, $intro, $root, $indexes, $index, $catalogue, @$repo);
+	build_repo($name, $intro, $root, $url, $indexes, $index, $catalogue, @$repo);
 }
 
 
@@ -83,13 +107,14 @@ foreach my $repo (@repos) {
 # Param $name		The name of the repository.
 # Param $intro		The introductory text for the repository.
 # Param $root		The repository root directory.
+# Param $url		The base URL of the online repository.
 # Param $indexes	The index folder for the repository.
 # Param $index		The index file for the repository.
 # Param $catalogue	The catalogue file for the repository.
 # Param @folders	The folders to be scanned for the repository.
 
 sub build_repo {
-	my ($name, $intro, $root, $indexes, $index, $catalogue, @folders) = @_;
+	my ($name, $intro, $root, $url, $indexes, $index, $catalogue, @folders) = @_;
 
 	my %packages;
 
@@ -190,9 +215,9 @@ sub build_repo {
 	open(INDEX, ">".$root.$indexes.$index) || die "Can't open output file: $!\n";
 
 	print CATALOGUE make_catalogue_header($name);
-	print CATALOGUE make_html_block($intro);
-
-	print CATALOGUE "\n";
+	print CATALOGUE $intro . "\n";
+	print CATALOGUE make_catalogue_path_info($url.$indexes.$index);
+	print "\n";
 
 	my $newest_date = 0;
 
@@ -343,6 +368,26 @@ sub make_catalogue_header {
 | <a href=\"../\" class=\"breadcrumb\">RISC OS Software</a>
 | <a href=\"index.html\" class=\"breadcrumb\">Repositories</a>
 | <span class=\"breadcrumb-here\">".$name."</span> ]</p>
+
+";
+}
+
+sub make_catalogue_path_info {
+	my ($index) = @_;
+
+	return
+
+"<p>Although the software listed on this page can be manually downloaded in the
+packages below, this is not recommended and the repository is better used by
+including it into your package management software. To do this, add</p>
+
+<blockquote><code>".$index."</code></blockquote>
+
+<p>to the list of software sources.</p>
+
+<p>If you would prefer to download and install your software manually &ndash;
+and not via package management &ndash; then the better route is via the
+stand-alone zip archives found via the <a href=\"../\">main software pages</a>.</p>
 
 ";
 }
