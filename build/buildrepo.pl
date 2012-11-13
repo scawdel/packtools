@@ -36,6 +36,7 @@ use File::Spec;
 use Digest::MD5;
 use IO::Uncompress::Unzip qw(unzip $UnzipError);
 use DateTime;
+use HTML::Entities;
 
 # The public URL of the repository; must end in /
 
@@ -227,9 +228,9 @@ sub build_repo {
 
 		my $versions = $packages{$pkg_key};
 
-		print CATALOGUE "\n<!-- " . $pkg_key . " -->\n\n";
+		print CATALOGUE "\n<!-- " . encode_entities($pkg_key) . " -->\n\n";
 		print CATALOGUE "<img src=\"../images/zip.png\" alt=\"\" width=34 height=34 class=\"list-image\">\n\n";
-		print CATALOGUE "<h3>" . $pkg_key . "</h3>\n\n";
+		print CATALOGUE "<h3>" . encode_entities($pkg_key) . "</h3>\n\n";
 
 		my $last_description = "";
 
@@ -240,14 +241,15 @@ sub build_repo {
 
 
 			if (defined($fields->{'Description'}) && $fields->{'Description'} ne $last_description) {
-				print CATALOGUE make_html_block($fields->{'Description'}) . "\n";
+				print CATALOGUE make_html_block(encode_entities($fields->{'Description'})) . "\n";
 				$last_description = $fields->{'Description'};
 			}
 
 			print CATALOGUE "<p class=\"download\"><img src=\"../images/zip.png\" alt=\"\" width=34 height=34>\n";
 			# print CATALOGUE "<img src=\"../images/iyonix.gif\" alt=\"Iyonix OK\" width=34 height=39 class=\"iyonix\">\n";
-			print CATALOGUE "<b>Download:</b> <a href=\"".$fields->{'Cat-URL'}."\">".$fields->{'Package'}." ".$fields->{'Version'}."</a> ";
-			print CATALOGUE "(MD5: <code>" . $fields->{'MD5Sum'} . "</code>)<br>\n";
+			print CATALOGUE "<b>Download:</b> <a href=\"".$fields->{'Cat-URL'}."\">".
+					encode_entities($fields->{'Package'})." ".encode_entities($fields->{'Version'})."</a> ";
+			print CATALOGUE "(MD5: <code>" . encode_entities($fields->{'MD5Sum'}) . "</code>)<br>\n";
 
 			my $date = DateTime->from_epoch(epoch => $fields->{'Cat-Date'});
 			my $size = $fields->{'Size'};
@@ -265,8 +267,8 @@ sub build_repo {
 				$size_unit = "Kbytes";
 			}
 
-			print CATALOGUE $size . " " . $size_unit . " | ";
-			print CATALOGUE $date->day().$date_postfix[$date->day()]. " " . $date->month_name() . ", " . $date->year();
+			print CATALOGUE encode_entities($size . " " . $size_unit . " | ");
+			print CATALOGUE encode_entities($date->day().$date_postfix[$date->day()]. " " . $date->month_name() . ", " . $date->year());
 			print CATALOGUE " | 26/32-bit neutral</p>\n\n";
 
 			print INDEX $fields->{'Cat-Control'};
@@ -371,13 +373,13 @@ sub make_catalogue_header {
 <head>
 <meta http-equiv=\"Content-Type\" content=\"text/html; charset=iso-8859-1\">
 <link rel=\"stylesheet\" type=\"text/css\" href=\"../../style/base.css\" media=\"screen\">
-<title>RISC OS Software &ndash; Repositories &ndash; ".$name."</title>
+<title>RISC OS Software &ndash; Repositories &ndash; ".encode_entities($name)."</title>
 </head>
 
 <body bgcolor=\"#ffffff\" text=\"#000000\">
 <div id=\"container\">
 <div id=\"header\">
-<h1>Repositories &ndash; ".$name."</h1>
+<h1>Repositories &ndash; ".encode_entities($name)."</h1>
 </div>
 
 <div id=\"content\">
@@ -385,7 +387,7 @@ sub make_catalogue_header {
 <p class=\"breadcrumb\">[ <a href=\"../../\" class=\"breadcrumb\">Home</a>
 | <a href=\"../\" class=\"breadcrumb\">RISC OS Software</a>
 | <a href=\"index.html\" class=\"breadcrumb\">Repositories</a>
-| <span class=\"breadcrumb-here\">".$name."</span> ]</p>
+| <span class=\"breadcrumb-here\">".encode_entities($name)."</span> ]</p>
 
 ";
 }
@@ -405,7 +407,7 @@ sub make_catalogue_path_info {
 packages below, this is not recommended and the repository is better used by
 including it into your package management software. To do this, add</p>
 
-<blockquote><code>".$index."</code></blockquote>
+<blockquote><code>".encode_entities($index)."</code></blockquote>
 
 <p>to the list of software sources.</p>
 
@@ -431,7 +433,7 @@ sub make_catalogue_footer {
 "<p class=\"breadcrumb\">[ <a href=\"../../\" class=\"breadcrumb\">Home</a>
 | <a href=\"../\" class=\"breadcrumb\">RISC OS Software</a>
 | <a href=\"index.html\" class=\"breadcrumb\">Repositories</a>
-| <span class=\"breadcrumb-here\">".$name."</span> ]</p>
+| <span class=\"breadcrumb-here\">".encode_entities($name)."</span> ]</p>
 
 </div>
 
@@ -441,7 +443,7 @@ sub make_catalogue_footer {
 <a href=\"http://www.anybrowser.org/campaign/\"><img src=\"../../images/any.gif\" alt=\"Best veiwed with Any Browser!\" width=81 height=31 border=0></a>&nbsp;
 <a href=\"http://jigsaw.w3.org/css-validator/check/referer\"><img src=\"../../images/vcss.gif\" alt=\"Valid CSS!\" width=88 height=31 border=0></a></p>
 
-<p>Page last updated ".$date." | Maintained by Steve Fryatt:
+<p>Page last updated ".encode_entities($date)." | Maintained by Steve Fryatt:
 <a href=\"mailto:web\@stevefryatt.org.uk\">web\@stevefryatt.org.uk</a></p>
 </div>
 </div>
