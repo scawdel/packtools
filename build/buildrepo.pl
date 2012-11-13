@@ -276,6 +276,10 @@ sub build_repo {
 		}
 	}
 
+	if (!%packages) {
+		print CATALOGUE "<p><i>There are no packages in this repository.</i></p>\n\n";
+	}
+
 	my $date = ($newest_date != 0) ? DateTime->from_epoch(epoch => $newest_date) : DateTime->now();
 	print CATALOGUE make_catalogue_footer($name, $date->day().$date_postfix[$date->day()]. " " . $date->month_name() . ", " . $date->year());
 
