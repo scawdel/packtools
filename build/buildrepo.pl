@@ -50,7 +50,13 @@ my $root = "/home/steve/Development/Packaging/Repo/software/repo/";
 
 my $indexes = "pkg/";
 
-# Repository details; name, index, catalogue, introduction, folder [, folder... ]
+# Repository details:
+#
+#     name, index, catalogue,
+#
+#   introduction,
+#
+#     folder [, folder... ]
 
 my @repos = (
 	# Stable Repository
@@ -216,6 +222,8 @@ sub build_repo {
 	open(CATALOGUE, ">".$root.$catalogue) || die "Can't open output file: $!\n";
 	open(INDEX, ">".$root.$indexes.$index) || die "Can't open output file: $!\n";
 
+	# Output the catalogue page header.
+
 	print CATALOGUE make_catalogue_header($name);
 	print CATALOGUE $intro . "\n";
 	print CATALOGUE make_catalogue_path_info($url.$indexes.$index);
@@ -228,6 +236,8 @@ sub build_repo {
 
 		my $versions = $packages{$pkg_key};
 
+		# Output the package collection heading, for all of the package's versions.
+
 		print CATALOGUE "\n<!-- " . encode_entities($pkg_key) . " -->\n\n";
 		print CATALOGUE "<img src=\"../images/zip.png\" alt=\"\" width=34 height=34 class=\"list-image\">\n\n";
 		print CATALOGUE "<h3>" . encode_entities($pkg_key) . "</h3>\n\n";
@@ -239,11 +249,15 @@ sub build_repo {
 
 			my $fields = $versions->{$vsn_key};
 
+			# Output the package description if it is the first t be listed or
+			# if it differs from the previous one.
 
 			if (defined($fields->{'Description'}) && $fields->{'Description'} ne $last_description) {
 				print CATALOGUE make_html_block(encode_entities($fields->{'Description'})) . "\n";
 				$last_description = $fields->{'Description'};
 			}
+
+			# Output the package's download link for the catalogue.
 
 			print CATALOGUE "<p class=\"download\"><img src=\"../images/zip.png\" alt=\"\" width=34 height=34>\n";
 			# print CATALOGUE "<img src=\"../images/iyonix.gif\" alt=\"Iyonix OK\" width=34 height=39 class=\"iyonix\">\n";
@@ -271,6 +285,8 @@ sub build_repo {
 			print CATALOGUE encode_entities($date->day().$date_postfix[$date->day()]. " " . $date->month_name() . ", " . $date->year());
 			print CATALOGUE " | 26/32-bit neutral</p>\n\n";
 
+			# Output the package's index entry.
+
 			print INDEX $fields->{'Cat-Control'};
 			print INDEX "Size: " . $fields->{'Size'} . "\n";
 			print INDEX "MD5Sum: " . $fields->{'MD5Sum'} . "\n";
@@ -278,6 +294,8 @@ sub build_repo {
 			print INDEX "\n\n";
 		}
 	}
+
+	# Output the catalogue page footer.
 
 	if (!%packages) {
 		print CATALOGUE "<p><i>There are no packages in this repository.</i></p>\n\n";
