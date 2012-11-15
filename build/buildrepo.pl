@@ -262,10 +262,11 @@ sub build_repo {
 
 			# Output the package's download link for the catalogue.
 
-			print CATALOGUE "<p>This package is intended for installation via a package manager. If you\n".
-					"wish to install <cite>".$fields->{'Package'}."</cite> manually, it is\n".
-					"better to download the\n".
-					"<a href=\"".$fields->{'Cat-ParentURL'}."\">unpackaged zip file from this page</a>.</p>\n\n";
+			print CATALOGUE "<p>This package is intended for installation via a package manager. If you ".
+					"wish to find out more about <cite>".$fields->{'Package'}."</cite>, or install ".
+					"it manually, it is better to visit ".
+					"<a href=\"".$fields->{'Cat-ParentURL'}."\">its full page on this site</a> ".
+					"and download the standard zip archive from there.</p>\n\n";
 
 			print CATALOGUE "<p class=\"download\"><img src=\"../images/zip.png\" alt=\"\" width=34 height=34>\n";
 			# print CATALOGUE "<img src=\"../images/iyonix.gif\" alt=\"Iyonix OK\" width=34 height=39 class=\"iyonix\">\n";
