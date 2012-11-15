@@ -197,6 +197,9 @@ sub build_repo {
 				$field->{'Cat-URL'} = File::Spec->abs2rel($file, $root);
 				$field->{'Cat-Control'} = $control;
 
+				$file =~ /$root$folder\/(.*)\//;
+				$field->{'Cat-ParentURL'} = "../".$1."/";
+
 				if (!defined($packages{$field->{'Package'}})) {
 					$packages{$field->{'Package'}} = {$field->{'Version'} => $field};
 					print "Version " . $field->{'Version'} . " added to new package " . $field->{'Package'} . ".\n";
@@ -259,11 +262,15 @@ sub build_repo {
 
 			# Output the package's download link for the catalogue.
 
+			print CATALOGUE "<p>This package is intended for installation via a package manager. If you\n".
+					"wish to install <cite>".$fields->{'Package'}."</cite> manually, it is\n".
+					"better to download the\n".
+					"<a href=\"".$fields->{'Cat-ParentURL'}."\">unpackaged zip file from this page</a>.</p>\n\n";
+
 			print CATALOGUE "<p class=\"download\"><img src=\"../images/zip.png\" alt=\"\" width=34 height=34>\n";
 			# print CATALOGUE "<img src=\"../images/iyonix.gif\" alt=\"Iyonix OK\" width=34 height=39 class=\"iyonix\">\n";
 			print CATALOGUE "<b>Download:</b> <a href=\"".$fields->{'Cat-URL'}."\">".
-					encode_entities($fields->{'Package'})." ".encode_entities($fields->{'Version'})."</a> ";
-			print CATALOGUE "(MD5: <code>" . encode_entities($fields->{'MD5Sum'}) . "</code>)<br>\n";
+					encode_entities($fields->{'Package'})." ".encode_entities($fields->{'Version'})."</a><br>\n";
 
 			my $date = DateTime->from_epoch(epoch => $fields->{'Cat-Date'});
 			my $size = $fields->{'Size'};
@@ -283,7 +290,7 @@ sub build_repo {
 
 			print CATALOGUE encode_entities($size . " " . $size_unit . " | ");
 			print CATALOGUE encode_entities($date->day().$date_postfix[$date->day()]. " " . $date->month_name() . ", " . $date->year());
-			print CATALOGUE " | 26/32-bit neutral</p>\n\n";
+			print CATALOGUE " | MD5: <code>" . encode_entities($fields->{'MD5Sum'}) . "</code></p>\n\n";
 
 			# Output the package's index entry.
 
