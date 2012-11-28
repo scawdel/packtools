@@ -331,17 +331,19 @@ sub parse_control {
 	my $first_extra_line = 0;
 
 	foreach my $line (split('\n', $control)) {
-		if (substr($line, 0, 1) ne " ") {
+		if (length($line) > 0 && substr($line, 0, 1) ne " ") {
 			# If there's no space at the start of the line, this is a new
 			# token. Break into token:value, then remove whitespace from
 			# value.
 
 			my ($name, $value) = split(':', $line);
-			$value =~ s/^\s+|\s+$//g;
+			if (defined($name) && defined($value)) {
+				$value =~ s/^\s+|\s+$//g;
 
-			$field{$name} = $value;
-			$last = $name;
-			$first_extra_line = 1;
+				$field{$name} = $value;
+				$last = $name;
+				$first_extra_line = 1;
+			}
 		} else {
 			# If there's whitespace at the start of the line, this is a
 			# continuation of the previous line. Process this: lines are
