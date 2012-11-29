@@ -22,21 +22,15 @@
 # See the Licence for the specific language governing
 # permissions and limitations under the Licence.
 
-# BuildRepo -- Build repository catalogues and index files based on the
-#              packages containd in them.
+# GetPackageRev -- Get a pachage revision code based on the content revision
+#                  and any other packages already in the target repository.
 #
-# Usage: BuildRepo
+# Usage: GetPackageRev
 
 use strict;
 
 # Requires libfile-find-rule-perl and libdatetime-perl packages.
 
-#use File::Find::Rule;
-#use File::Spec;
-#use Digest::MD5;
-#use IO::Uncompress::Unzip qw(unzip $UnzipError);
-#use DateTime;
-#use HTML::Entities;
 use LWP::UserAgent;
 
 my $package = "CashBook";
@@ -56,10 +50,8 @@ $ua->agent("$0/0.1 " . $ua->agent);
 my $req = HTTP::Request->new(GET => $url.$index);
 $req->header('Accept' => 'text/html');
 
-# send request
 my $res = $ua->request($req);
 
-# check the outcome
 if (!$res->is_success) {
 	die "Failed to fetch repository index: ".$res->status_line."\n";
 }
