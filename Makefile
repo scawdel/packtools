@@ -77,7 +77,7 @@ MENUGEN := $(SFBIN)/menugen
 
 ZIPFLAGS := -x "*/.svn/*" -r -, -9
 SRCZIPFLAGS := -x "*/.svn/*" -r -9
-BUZIPFLAGS := -x "*/.svn/*" -r -9
+BUZIPFLAGS := -x "*/.svn/*" -x "*Repo*" -r -9
 BINDHELPFLAGS := -f -r -v
 MENUGENFLAGS := -d
 
