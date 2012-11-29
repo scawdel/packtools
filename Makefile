@@ -92,7 +92,7 @@ LICENCE := Licence,fff
 # Set up the named target files.
 
 README := ReadMe,fff
-EXECUTABLES := buildrepo.pl,102, getpackagerev.pl,102
+EXECUTABLES := buildrepo.pl,102 getpackagerev.pl,102
 SUFFIX := .pl,102
 
 
