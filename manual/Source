@@ -1,0 +1,93 @@
+<document title="ManTools">
+<define name="version" value="">
+<define name="date" value="" length=30 align="right">
+
+
+
+
+<literal mode="Text">
+=============================================================================
+PackTools - RISC OS Package Creation Tools                       Version $$version$$
+
+(C) Stephen Fryatt, 2002-2012                  $$date$$
+=============================================================================
+</literal>
+
+
+
+
+
+<chapter title="License" file="License">
+
+<cite>PackTools</cite> are licensed under the EUPL, Version&nbsp;1.1 only (the "Licence"); you may not use this work except in compliance with the Licence.
+
+You may obtain a copy of the Licence at <link ref="#url http://joinup.ec.europa.eu/software/page/eupl">http://joinup.ec.europa.eu/software/page/eupl</link>
+
+Unless required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an &quot;<strong>as is</strong>&quot; basis, <strong>without warranties or conditions of any kind</strong>, either express or implied.
+
+See the Licence for the specific language governing permissions and limitations under the Licence.
+
+The source for <cite>PackTools</cite> can be found alongside this binary download, at <link ref="#url http://www.stevefryatt.org.uk/software">http://www.stevefryatt.org.uk/software</link>
+
+</chapter>
+
+
+
+
+
+<chapter title="Introduction" file="Introduction">
+
+<cite>PackTools</cite> are a set of Perl scripts intended for generating RISC&nbsp;OS packages. They are intended primarily for use in a cross-compilation environment.
+
+To use the scripts natively on RISC&nbsp;OS, a copy of Perl&nbsp;5 will be required. At the time of writing, a copy can be found at <link ref="#url http://www.cp15.org/perl/">http://www.cp15.org/perl/</link>. The scripts are command-line based, and should be installed in a library or called by their full pathname.
+
+</chapter>
+
+
+
+
+
+<chapter title="Command Line Use" file="Use">
+
+The scripts that comprise <cite>PackTools</cite> are <cite>BuildRepo</cite> and <cite>GetPackageRev</cite>.
+
+<subhead title="BuildRepo">
+
+
+
+<subhead title="GetPackageRev">
+
+<cite>GetPackageRev</cite> identifies a revision for a new package, based on the revision of the software to be included in it and any packages already in the target repository.
+
+<command>getpackagerev --package &lt;name&gt; --revision &lt;revision&gt; [--verbose]</command>
+
+</chapter>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<literal mode="Text">
+
+
+Updates and Contacting Me
+-------------------------
+
+  If you have any comments about PackTools, or would like to report any bugs
+  that you find, you can email me at the address below.
+
+  Updates to PackTools and more programs for RISC OS computers can be found
+  on my website at http://www.stevefryatt.org.uk/software/
+
+  Stephen Fryatt
+  email: steve@stevefryatt.org.uk
+</literal>
+
