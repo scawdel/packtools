@@ -32,9 +32,17 @@ use strict;
 # Requires libfile-find-rule-perl and libdatetime-perl packages.
 
 use LWP::UserAgent;
+use Getopt::Long;
 
-my $package = "CashBook";
-my $revision = "1.31";
+my $package;
+my $revision;
+my $verbose = 0;
+
+&GetOptions("package=s" => \$package, "revision=s" => \$revision, "verbose" => \$verbose);
+
+if (!defined($package) || !defined($revision)) {
+	die "Missing parameters\n";
+}
 
 # The public URL of the repository; must end in /
 
@@ -88,12 +96,14 @@ foreach my $line (split('\n', $res->decoded_content)) {
 	}
 }
 
-foreach my $key (keys(%version)) {
-	print $key, " at revision ", $version{$key}, "\n";
+if ($verbose == 1) {
+	foreach my $key (keys(%version)) {
+		print "Found", $key, " at revision ", $version{$key}, "\n";
+	}
 }
 
 if (defined($version{$revision})) {
-	print "New revision: ".$revision."-".($version{$revision} + 1)."\n";
+	print $revision."-".($version{$revision} + 1)."\n";
 } else {
-	print "New revision: ".$revision."-1\n";
+	print $revision."-1\n";
 }
