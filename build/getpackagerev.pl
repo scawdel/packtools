@@ -15,17 +15,17 @@
 #   http://joinup.ec.europa.eu/software/page/eupl
 #
 # Unless required by applicable law or agreed to in
-# writing, software distributed under the Licence is
+# writing, software distributed under the Licence isGetPackageRev --package <name> --revision <code> [--[no]verbose]
 # distributed on an "AS IS" basis, WITHOUT WARRANTIES
 # OR CONDITIONS OF ANY KIND, either express or implied.
 #
 # See the Licence for the specific language governing
 # permissions and limitations under the Licence.
 
-# GetPackageRev -- Get a pachage revision code based on the content revision
+# GetPackageRev -- Get a package revision code based on the content revision
 #                  and any other packages already in the target repository.
 #
-# Usage: GetPackageRev
+# Usage: GetPackageRev --package <name> --revision <code> [--[no]verbose]
 
 use strict;
 
@@ -41,7 +41,7 @@ my $verbose = 0;
 &GetOptions("package=s" => \$package, "revision=s" => \$revision, "verbose" => \$verbose);
 
 if (!defined($package) || !defined($revision)) {
-	die "Missing parameters\n";
+	die "Usage: GetPackageRev --package <name> --revision <code> [--[no]verbose]\n";
 }
 
 # The public URL of the repository; must end in /
