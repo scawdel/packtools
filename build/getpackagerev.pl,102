@@ -25,7 +25,7 @@
 # GetPackageRev -- Get a package revision code based on the content revision
 #                  and any other packages already in the target repository.
 #
-# Usage: GetPackageRev --package <name> --revision <code> [--[no]verbose]
+# Usage: GetPackageRev --index <repository> --package <name> --revision <code> [--[no]verbose]
 
 use strict;
 
@@ -36,19 +36,18 @@ use Getopt::Long;
 
 my $package;
 my $revision;
+my $index;
 my $verbose = 0;
 
-&GetOptions("package=s" => \$package, "revision=s" => \$revision, "verbose" => \$verbose);
+&GetOptions("index=s" => \$index, "package=s" => \$package, "revision=s" => \$revision, "verbose" => \$verbose);
 
-if (!defined($package) || !defined($revision)) {
-	die "Usage: GetPackageRev --package <name> --revision <code> [--[no]verbose]\n";
+if (!defined($index) || !defined($package) || !defined($revision)) {
+	die "Usage: GetPackageRev --index <repository> --package <name> --revision <code> [--[no]verbose]\n";
 }
 
 # The public URL of the repository; must end in /
 
 my $url = "http://latrigg/~steve/steve/software/repo/pkg/";
-
-my $index = "stable";
 
 # Fetch the index file from the server.
 
