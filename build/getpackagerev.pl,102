@@ -29,7 +29,7 @@
 
 use strict;
 
-# Requires libfile-find-rule-perl and libdatetime-perl packages.
+# Requires libwww-perl package.
 
 use LWP::UserAgent;
 use Getopt::Long;
