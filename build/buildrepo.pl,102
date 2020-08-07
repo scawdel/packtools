@@ -40,11 +40,15 @@ use HTML::Entities;
 
 # The public URL of the repository; must end in /
 
-my $url = "http://www.stevefryatt.org.uk/software/repo/";
+my $remote = "http://www.stevefryatt.org.uk/";
 
 # The root of the repository; must end in /
 
-my $root = "/home/steve/Development/Packaging/Repo/software/repo/";
+my $local = "/home/steve/Development/Packaging/Repo/";
+
+
+
+my $path = "software/repo/";
 
 # The package index folder; must end in ;
 
@@ -61,7 +65,7 @@ my $indexes = "pkg/";
 my @repos = (
 	# Stable Repository
 
-	['Stable',	'stable',	'stable.html',
+	['Stable',	'stable',	'stable.html',		'rool',
 
 '<p>The &lsquo;stable&rsquo; repository contains release versions of software. If
 you wish to test the latest &ldquo;cutting-edge&rdquo; developments, you should
@@ -71,7 +75,7 @@ make use of the packages in the <a href="unstable.html">unstable repository</a>.
 
 	# Unstable Repository
 
-	['Unstable',	'unstable',	'unstable.html',
+	['Unstable',	'unstable',	'unstable.html',	undef,
 
 '<p>The &lsquo;unstable&rsquo; repository contains packages of software which
 is currently under development. In contrast to the <a href="stable.html">stable
@@ -99,11 +103,12 @@ foreach my $repo (@repos) {
 	my $name = shift @$repo;
 	my $index = shift @$repo;
 	my $catalogue = shift @$repo;
+	my $rool = shift @$repo;
 	my $intro = shift @$repo;
 
 	print "Generate repository " . $name . "\n";
 
-	build_repo($name, $intro, $root, $url, $indexes, $index, $catalogue, @$repo);
+	build_repo($name, $intro, $local, $remote, $path, $indexes, $index, $rool, $catalogue, @$repo);
 }
 
 
@@ -114,15 +119,17 @@ foreach my $repo (@repos) {
 #
 # Param $name		The name of the repository.
 # Param $intro		The introductory text for the repository.
-# Param $root		The repository root directory.
-# Param $url		The base URL of the online repository.
+# Param $local		The repository root directory.
+# Param $remote		The base URL of the online repository.
+# Param $path		The path tail into the repository.
 # Param $indexes	The index folder for the repository.
 # Param $index		The index file for the repository.
+# Param $rool		The ROOL pull file for the repository.
 # Param $catalogue	The catalogue file for the repository.
 # Param @folders	The folders to be scanned for the repository.
 
 sub build_repo {
-	my ($name, $intro, $root, $url, $indexes, $index, $catalogue, @folders) = @_;
+	my ($name, $intro, $local, $remote, $path, $indexes, $index, $rool, $catalogue, @folders) = @_;
 
 	my %packages;
 
@@ -141,7 +148,7 @@ sub build_repo {
 	foreach my $folder (@folders) {
 		my $rule = File::Find::Rule->new;
 		$rule->file();
-		my @files = $rule->in(($root.$folder));
+		my @files = $rule->in(($local.$path.$folder));
 
 		foreach my $file (@files) {
 			print "Starting to process " . $file . "...\n";
@@ -191,13 +198,13 @@ sub build_repo {
 
 				$field->{'Size'} = $size;
 				$field->{'MD5Sum'} = $md5;
-				$field->{'URL'} = File::Spec->abs2rel($file, $root.$indexes);
+				$field->{'URL'} = File::Spec->abs2rel($file, $local.$path.$indexes);
 
 				$field->{'Cat-Date'} = $date;
-				$field->{'Cat-URL'} = File::Spec->abs2rel($file, $root);
+				$field->{'Cat-URL'} = File::Spec->abs2rel($file, $local.$path);
 				$field->{'Cat-Control'} = $control;
 
-				$file =~ /$root$folder\/(.*)\//;
+				$file =~ /$local$path$folder\/(.*)\//;
 				$field->{'Cat-ParentURL'} = "../".$1."/";
 
 				if (!defined($packages{$field->{'Package'}})) {
@@ -222,14 +229,18 @@ sub build_repo {
 			"th", "th", "th", "st", "nd", "rd", "th", "th", "th",
 			"th", "th", "th", "th", "st");
 
-	open(CATALOGUE, ">".$root.$catalogue) || die "Can't open output file: $!\n";
-	open(INDEX, ">".$root.$indexes.$index) || die "Can't open output file: $!\n";
+	open(CATALOGUE, ">".$local.$path.$catalogue) || die "Can't open output file: $!\n";
+	open(INDEX, ">".$local.$path.$indexes.$index) || die "Can't open output file: $!\n";
+
+	if (defined($rool)) {
+		open(ROOL, ">".$local.$path.$rool) || die "Can't open output file $!\n";
+	}
 
 	# Output the catalogue page header.
 
 	print CATALOGUE make_catalogue_header($name);
 	print CATALOGUE $intro . "\n";
-	print CATALOGUE make_catalogue_path_info($url.$indexes.$index);
+	print CATALOGUE make_catalogue_path_info($remote.$path.$indexes.$index);
 	print "\n";
 
 	my $newest_date = 0;
@@ -300,6 +311,10 @@ sub build_repo {
 			print INDEX "MD5Sum: " . $fields->{'MD5Sum'} . "\n";
 			print INDEX "URL: " . $fields->{'URL'} . "\n";
 			print INDEX "\n\n";
+
+			if (defined($rool)) {
+				print ROOL "/".$path.$fields->{'Cat-URL'}."\n";
+			}
 		}
 	}
 
@@ -314,6 +329,10 @@ sub build_repo {
 
 	close(CATALOGUE);
 	close(INDEX);
+
+	if (defined($rool)) {
+		close(ROOL);
+	}
 }
 
 
