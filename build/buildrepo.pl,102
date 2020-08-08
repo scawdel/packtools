@@ -38,17 +38,17 @@ use IO::Uncompress::Unzip qw(unzip $UnzipError);
 use DateTime;
 use HTML::Entities;
 
-# The public URL of the repository; must end in /
+# The public URL of the root of the site; must end in /
 
 my $remote = "http://www.stevefryatt.org.uk/";
 
-# The root of the repository; must end in /
+# The local path to the root of the site; must end in /
 
-my $local = "/home/steve/Development/Packaging/Repo/";
+my $local = "/remote/steve/public_html/steve/";
 
+# The location of the repository within the site.
 
-
-my $path = "software/repo/";
+my $path = "repo2/";
 
 # The package index folder; must end in ;
 
@@ -205,7 +205,7 @@ sub build_repo {
 				$field->{'Cat-Control'} = $control;
 
 				$file =~ /$local$path$folder\/(.*)\//;
-				$field->{'Cat-ParentURL'} = "../".$1."/";
+				$field->{'Cat-ParentURL'} = "../software/".$1."/";
 
 				if (!defined($packages{$field->{'Package'}})) {
 					$packages{$field->{'Package'}} = {$field->{'Version'} => $field};
@@ -240,7 +240,11 @@ sub build_repo {
 
 	print CATALOGUE make_catalogue_header($name);
 	print CATALOGUE $intro . "\n";
-	print CATALOGUE make_catalogue_path_info($remote.$path.$indexes.$index);
+	if (defined($rool)) {
+		print CATALOGUE make_rool_catalogue_path_info($remote.$path.$indexes.$index);
+	} else {
+		print CATALOGUE make_catalogue_path_info($remote.$path.$indexes.$index);
+	}
 	print "\n";
 
 	my $newest_date = 0;
@@ -253,7 +257,7 @@ sub build_repo {
 		# Output the package collection heading, for all of the package's versions.
 
 		print CATALOGUE "\n<!-- " . encode_entities($pkg_key) . " -->\n\n";
-		print CATALOGUE "<img src=\"../images/zip.png\" alt=\"\" width=34 height=34 class=\"list-image\">\n\n";
+		print CATALOGUE "<img src=\"../software/images/zip.png\" alt=\"\" width=34 height=34 class=\"list-image\">\n\n";
 		print CATALOGUE "<h3>" . encode_entities($pkg_key) . "</h3>\n\n";
 
 		my $last_description = "";
@@ -279,8 +283,8 @@ sub build_repo {
 					"<a href=\"".$fields->{'Cat-ParentURL'}."\">its full page on this site</a> ".
 					"and download the standard zip archive from there.</p>\n\n";
 
-			print CATALOGUE "<p class=\"download\"><img src=\"../images/zip.png\" alt=\"\" width=34 height=34>\n";
-			# print CATALOGUE "<img src=\"../images/iyonix.gif\" alt=\"Iyonix OK\" width=34 height=39 class=\"iyonix\">\n";
+			print CATALOGUE "<p class=\"download\"><img src=\"../software/images/zip.png\" alt=\"\" width=34 height=34>\n";
+			# print CATALOGUE "<img src=\"../software/images/iyonix.gif\" alt=\"Iyonix OK\" width=34 height=39 class=\"iyonix\">\n";
 			print CATALOGUE "<b>Download:</b> <a href=\"".$fields->{'Cat-URL'}."\">".
 					encode_entities($fields->{'Package'})." ".encode_entities($fields->{'Version'})."</a><br>\n";
 
@@ -419,8 +423,8 @@ sub make_catalogue_header {
 
 <head>
 <meta http-equiv=\"Content-Type\" content=\"text/html; charset=iso-8859-1\">
-<link rel=\"stylesheet\" type=\"text/css\" href=\"../../style/base.css\" media=\"screen\">
-<title>RISC OS Software &ndash; Repositories &ndash; ".encode_entities($name)."</title>
+<link rel=\"stylesheet\" type=\"text/css\" href=\"../style/base.css\" media=\"screen\">
+<title>Repositories &ndash; ".encode_entities($name)."</title>
 </head>
 
 <body bgcolor=\"#ffffff\" text=\"#000000\">
@@ -431,10 +435,43 @@ sub make_catalogue_header {
 
 <div id=\"content\">
 
-<p class=\"breadcrumb\">[ <a href=\"../../\" class=\"breadcrumb\">Home</a>
-| <a href=\"../\" class=\"breadcrumb\">RISC OS Software</a>
+<p class=\"breadcrumb\">[ <a href=\"../\" class=\"breadcrumb\">Home</a>
 | <a href=\"index.html\" class=\"breadcrumb\">Repositories</a>
 | <span class=\"breadcrumb-here\">".encode_entities($name)."</span> ]</p>
+
+";
+}
+
+
+# Return a repository catalogue page's index path info as a block of HTML.
+#
+# Param:		The public URL for the index.
+# Return:		The index info block.
+
+sub make_rool_catalogue_path_info {
+	my ($index) = @_;
+
+	return
+
+"<p>Although the software listed on this page can be manually downloaded in the
+packages below, this is not recommended. The files in this repository are automatically
+included in the <a href=\"http://packages.riscosopen.org/packages/\">RISC&nbsp;OS
+Open Third Party Repository</a>, which should be pre-configured by default in
+<a href=\"https://sites.google.com/site/alansriscosstuff/packman\">PackMan</a>.</p>
+
+<div style=\"padding: 0 0 0 52px; overflow: hidden;\"><img src=\"../software/images/warning.png\" width=32 height=29 style=\"float: left; margin-left: -42px; margin-top: 0em; padding-top: 0em;\" alt=\"Warning!\"><p style=\"margin-top:0em; margin-bottom: 0em;\"><strong>In normal use,
+it is not advised to add this repository to your package manager manually.</strong></p></div>
+
+<p>If, for some reason, you wish to add this repository to your package manager manually,
+you should add</p>
+
+<blockquote><code>".encode_entities($index)."</code></blockquote>
+
+<p>to the list of software sources.</p>
+
+<p>If you would prefer to download and install your software manually &ndash;
+and not via package management &ndash; then the better route is via the
+stand-alone zip archives found via the <a href=\"../software/\">main software pages</a>.</p>
 
 ";
 }
@@ -460,7 +497,7 @@ including it into your package management software. To do this, add</p>
 
 <p>If you would prefer to download and install your software manually &ndash;
 and not via package management &ndash; then the better route is via the
-stand-alone zip archives found via the <a href=\"../\">main software pages</a>.</p>
+stand-alone zip archives found via the <a href=\"../software/\">main software pages</a>.</p>
 
 ";
 }
@@ -477,18 +514,17 @@ sub make_catalogue_footer {
 
 	return
 
-"<p class=\"breadcrumb\">[ <a href=\"../../\" class=\"breadcrumb\">Home</a>
-| <a href=\"../\" class=\"breadcrumb\">RISC OS Software</a>
+"<p class=\"breadcrumb\">[ <a href=\"../\" class=\"breadcrumb\">Home</a>
 | <a href=\"index.html\" class=\"breadcrumb\">Repositories</a>
 | <span class=\"breadcrumb-here\">".encode_entities($name)."</span> ]</p>
 
 </div>
 
 <div id=\"footer\">
-<p><a href=\"http://validator.w3.org/check?uri=referer\"><img src=\"../../images/vh40.gif\" alt=\"Valid HTML 4.0!\" width=88 height=31 border=0></a>&nbsp;
-<a href=\"http://www.riscos.com/\"><img src=\"../../images/roro4x.gif\" alt=\"RISC OS\" width=88 height=31 border=0></a>&nbsp;
-<a href=\"http://www.anybrowser.org/campaign/\"><img src=\"../../images/any.gif\" alt=\"Best veiwed with Any Browser!\" width=81 height=31 border=0></a>&nbsp;
-<a href=\"http://jigsaw.w3.org/css-validator/check/referer\"><img src=\"../../images/vcss.gif\" alt=\"Valid CSS!\" width=88 height=31 border=0></a></p>
+<p><a href=\"http://validator.w3.org/check?uri=referer\"><img src=\"../images/vh40.gif\" alt=\"Valid HTML 4.0!\" width=88 height=31 border=0></a>&nbsp;
+<a href=\"http://www.riscos.com/\"><img src=\"../images/roro4x.gif\" alt=\"RISC OS\" width=88 height=31 border=0></a>&nbsp;
+<a href=\"http://www.anybrowser.org/campaign/\"><img src=\"../images/any.gif\" alt=\"Best veiwed with Any Browser!\" width=81 height=31 border=0></a>&nbsp;
+<a href=\"http://jigsaw.w3.org/css-validator/check/referer\"><img src=\"../images/vcss.gif\" alt=\"Valid CSS!\" width=88 height=31 border=0></a></p>
 
 <p>Page last updated ".encode_entities($date)." | Maintained by Steve Fryatt:
 <a href=\"mailto:web\@stevefryatt.org.uk\">web\@stevefryatt.org.uk</a></p>
