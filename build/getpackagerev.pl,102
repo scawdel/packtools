@@ -47,7 +47,7 @@ if (!defined($index) || !defined($package) || !defined($revision)) {
 
 # The public URL of the repository; must end in /
 
-my $url = "http://latrigg/~steve/steve/software/repo/pkg/";
+my $url = "http://blencathra/~steve/steve/repo2/pkg/";
 
 # Fetch the index file from the server.
 
