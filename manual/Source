@@ -9,7 +9,7 @@
 =============================================================================
 PackTools - RISC OS Package Creation Tools                       Version $$version$$
 
-(C) Stephen Fryatt, 2002-2012                  $$date$$
+(C) Stephen Fryatt, 2002-2020                  $$date$$
 =============================================================================
 </literal>
 
@@ -49,10 +49,20 @@ To use the scripts natively on RISC&nbsp;OS, a copy of Perl&nbsp;5 will be requi
 
 <chapter title="Command Line Use" file="Use">
 
-The scripts that comprise <cite>PackTools</cite> are <cite>BuildRepo</cite> and <cite>GetPackageRev</cite>.
+The scripts that comprise <cite>PackTools</cite> are <cite>BuildRepo</cite>, <cite>MakeControl</cite> and <cite>GetPackageRev</cite>.
 
 <subhead title="BuildRepo">
 
+<cite>BuildRepo</cite> will scan a directory of packages and build index pages.
+
+It is very tied to the structure of www.stevefryatt.org.uk, and may be of limited use to others. It takes no parameters.
+
+
+<subhead title="MakeControl">
+
+<cite>MakeControl</cite> takes a template RiscPkg control file and replaces the package version field with a version supplied on the command line.
+
+<command>makecontrol --template &lt;filename&gt;  --control &lt;filename&gt; --version &lt;version&gt;</command>
 
 
 <subhead title="GetPackageRev">
