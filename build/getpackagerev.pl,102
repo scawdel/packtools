@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 #
-# Copyright 2002-2012, Stephen Fryatt
+# Copyright 2002-2020, Stephen Fryatt
 #
 # This file is part of PackTools:
 #
@@ -15,7 +15,7 @@
 #   http://joinup.ec.europa.eu/software/page/eupl
 #
 # Unless required by applicable law or agreed to in
-# writing, software distributed under the Licence isGetPackageRev --package <name> --revision <code> [--[no]verbose]
+# writing, software distributed under the Licence is
 # distributed on an "AS IS" basis, WITHOUT WARRANTIES
 # OR CONDITIONS OF ANY KIND, either express or implied.
 #
@@ -47,7 +47,7 @@ if (!defined($index) || !defined($package) || !defined($revision)) {
 
 # The public URL of the repository; must end in /
 
-my $url = "http://blencathra/~steve/steve/repo2/pkg/";
+my $url = "http://blencathra/~steve/steve/repo/pkg/";
 
 # Fetch the index file from the server.
 
