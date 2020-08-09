@@ -379,6 +379,8 @@ sub parse_control {
 				if ($line ne '.' && length($line) > 0) {
 					if ($first_extra_line) {
 						$field{$last} .= "\n";
+					} else {
+						$field{$last} .= " ";
 					}
 					$field{$last} .= $line;
 				} else {
