@@ -1,4 +1,4 @@
-# Copyright 2010-2012, Stephen Fryatt
+# Copyright 2010-2020, Stephen Fryatt
 #
 # This file is part of PackTools:
 #
@@ -24,118 +24,11 @@
 # It is intended for native compilation on Linux (for use in a GCCSDK
 # environment) or cross-compilation under the GCCSDK.
 
-.PHONY: all clean documentation release install
+ARCHIVE := packtools
 
-
-# The build date.
-
-BUILD_DATE := $(shell date "+%d %b %Y")
-HELP_DATE := $(shell date "+%-d %B %Y")
-
-# Construct version or revision information.
-
-ifeq ($(VERSION),)
-  RELEASE := $(shell svnversion --no-newline)
-  VERSION := r$(RELEASE)
-  RELEASE := $(subst :,-,$(RELEASE))
-  HELP_VERSION := ----
-else
-  RELEASE := $(subst .,,$(VERSION))
-  HELP_VERSION := $(VERSION)
-endif
-
-$(info Building with version $(VERSION) ($(RELEASE)) on date $(BUILD_DATE))
-
-# The archive to assemble the release files in.  If $(RELEASE) is set, then the file can be given
-# a standard version number suffix.
-
-ZIPFILE := packtools$(RELEASE).zip
-SRCZIPFILE := packtools$(RELEASE)src.zip
-BUZIPFILE := packtools$(shell date "+%Y%m%d").zip
-
-
-# Build Tools
-
-MKDIR := mkdir
-RM := rm -rf
-CP := cp
-
-ZIP := $(GCCSDK_INSTALL_ENV)/bin/zip
-
-MANTOOLS := $(SFTOOLS_BIN)/mantools
-BINDHELP := $(SFTOOLS_BIN)/bindhelp
-TEXTMERGE := $(SFTOOLS_BIN)/textmerge
-MENUGEN := $(SFTOOLS_BIN)/menugen
-
-
-# Build Flags
-
-ZIPFLAGS := -x "*/.svn/*" -r -, -9
-SRCZIPFLAGS := -x "*/.svn/*" -r -9
-BUZIPFLAGS := -x "*/.svn/*" -x "*Repo*" -r -9
-BINDHELPFLAGS := -f -r -v
-MENUGENFLAGS := -d
-
-
-# Set up the various build directories.
-
-MANUAL := manual
-OUTDIR := build
-LICENCE := Licence,fff
-
-
-# Set up the named target files.
-
-README := ReadMe,fff
 EXECUTABLES := buildrepo.pl,102 getpackagerev.pl,102 makecontrol.pl,102
 SUFFIX := .pl,102
 
+TARGETFOLDER = $(SFTOOLS_BIN)
 
-# Set up the source files.
-
-MANSRC := Source
-MANSPR := ManSprite
-
-
-# Build everything, but don't package it for release.
-
-all: documentation
-
-
-# Build the documentation
-
-documentation: $(OUTDIR)/$(README)
-
-$(OUTDIR)/$(README): $(MANUAL)/$(MANSRC)
-	$(MANTOOLS) -MTEXT -I$(MANUAL)/$(MANSRC) -O$(OUTDIR)/$(README) -D'version=$(HELP_VERSION)' -D'date=$(HELP_DATE)'
-
-
-# Build the release Zip file.
-
-release: clean all
-	$(RM) ../$(ZIPFILE)
-	(cd $(OUTDIR) ; $(ZIP) $(ZIPFLAGS) ../../$(ZIPFILE) $(README) $(LICENCE) $(EXECUTABLES))
-	$(RM) ../$(SRCZIPFILE)
-	$(ZIP) $(SRCZIPFLAGS) ../$(SRCZIPFILE) $(OUTDIR) $(MANUAL) Makefile
-
-
-# Build a backup Zip file
-
-backup:
-	$(RM) ../$(BUZIPFILE)
-	$(ZIP) $(BUZIPFLAGS) ../$(BUZIPFILE) *
-
-
-# Install the finished version in the GCCSDK, ready for use.  It's not a striaghtforward
-# copy, as we need to strip the file extensions that are in build/ for the benefit
-# of the RISC OS target.
-
-install: clean all
-	for f in $(EXECUTABLES); do $(CP) $(OUTDIR)/$$f $(SFTOOLS_BIN)/$${f%$(SUFFIX)}; done
-
-
-# Clean targets
-
-clean:
-	$(RM) $(OUTDIR)/$(README)
-
+include $(SFTOOLS_MAKE)/Build
